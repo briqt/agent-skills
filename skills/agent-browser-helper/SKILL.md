@@ -10,18 +10,25 @@ profiles. After starting Chrome, use the **agent-browser** skill to operate it.
 
 ## Prerequisites
 
-- **agent-browser** skill: `npx skills add vercel-labs/agent-browser@agent-browser -g -y`
-- **agent-browser** CLI: `npm i -g agent-browser && agent-browser install`
-- Google Chrome or Chromium installed
-
-**IMPORTANT:** The agent-browser **skill** must be installed for the AI agent
-to know how to operate the browser. Without it, the agent has no command
-reference and will guess incorrectly. Check `chrome.sh start` output — if it
-shows a warning about missing skill, install it first.
+- **agent-browser** skill installed: `npx skills add vercel-labs/agent-browser@agent-browser -g -y`
+- **agent-browser** CLI installed: `npm i -g agent-browser && agent-browser install`
+- A Chromium-based browser (Chrome, Edge, Brave, etc.)
 
 ## Workflow
 
-### Step 0: Browser selection (first-run only)
+### Step 0: Ensure agent-browser skill is installed
+
+**BEFORE doing anything**, check if the agent-browser skill is available.
+If not installed, **STOP and tell the user** to install it:
+
+```
+npx skills add vercel-labs/agent-browser@agent-browser -g -y
+```
+
+**Do NOT attempt to operate the browser without the agent-browser skill.**
+Without it you have no command reference and WILL guess incorrectly.
+
+### Step 1: Browser selection (first-run only)
 
 If `start` returns `action_required: "select_browser"`, you **MUST** present
 the full list to the user and ask them to choose. **Do NOT pick one yourself.**
@@ -38,49 +45,21 @@ Example interaction:
 
 Then retry `start`. This only happens once — the choice is saved to config.
 
-### Step 1: Start Chrome
+### Step 2: Start Chrome
 
 ```bash
 bash $SCRIPTS/chrome.sh start
 ```
 
-Output example:
-```json
-{"status":"started","pid":12345,"cdpPort":9222,"profile":"default","userDataDir":"~/.agent-browser-helper/default/user-data"}
-```
+Output includes `cdpPort` — note this value for the next step.
 
-**Read the output carefully** — it tells you the CDP port and which profile
-is active. The profile's user-data-dir persists login state across sessions.
+### Step 3: Operate via agent-browser
 
-### Step 2: Load agent-browser documentation
+Read the **agent-browser** skill documentation for command syntax.
+Pass the `cdpPort` from Step 2 when connecting.
 
-**MUST DO before running any agent-browser command.** Run:
-
-```bash
-agent-browser skills get core
-```
-
-This outputs the correct command syntax. Do NOT guess commands — they use
-non-standard conventions (e.g., `open` not `navigate`, positional args not
-`--url` flags). If this command fails, the CLI is not installed.
-
-### Step 3: Connect and operate via agent-browser
-
-**First**, connect to the CDP port reported by Step 1:
-
-```bash
-agent-browser connect <port>
-```
-
-**Then** run commands (the connection persists for the session):
-
-```bash
-agent-browser open <url>
-agent-browser snapshot
-```
-
-**IMPORTANT:** Do NOT put `--cdp` after the subcommand — it will be ignored
-and agent-browser will launch its own headless browser instead.
+**Do NOT guess agent-browser commands.** They have non-standard conventions.
+Always refer to the agent-browser skill docs.
 
 ## Commands
 
@@ -179,24 +158,6 @@ Edit `config.json` in the skill directory:
 
 | Field | Description |
 |-------|-------------|
-| `browserPath` | Absolute path to browser executable. When empty, `start` triggers auto-detection and asks user to confirm. Supports Linux paths and Windows paths via WSL (e.g., `/mnt/c/Program Files/Google/Chrome/Application/chrome.exe`). |
-{
-  "browser": {
-    "headless": false,
-    "noSandbox": true,
-    "defaultProfile": "default",
-    "extraArgs": [
-      "--disable-blink-features=AutomationControlled",
-      "--disable-infobars",
-      "--window-size=1280,720"
-    ],
-    "profiles": {
-      "default": { "cdpPort": 9222 }
-    }
-  }
-}
-```
-
 ### Profile options
 
 | Field | Description | Default |
