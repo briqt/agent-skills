@@ -83,6 +83,30 @@ bash $SCRIPTS/chrome.sh stop --profile work
 bash $SCRIPTS/chrome.sh status
 ```
 
+### detect
+
+Scan for installed Chromium-based browsers (Linux, macOS, Windows/WSL). Returns a
+numbered list for the user to choose from.
+
+```bash
+bash $SCRIPTS/chrome.sh detect
+```
+
+### set-browser
+
+Save the browser choice to config. Accepts an index from `detect` output
+or a direct path.
+
+```bash
+bash $SCRIPTS/chrome.sh set-browser 1            # select by index from detect
+bash $SCRIPTS/chrome.sh set-browser /usr/bin/chromium  # direct path
+```
+
+**First-run flow:** If `browserPath` is empty, `start` will automatically run
+`detect` and return the list. The agent should present the list to the user,
+ask which browser to use, then call `set-browser` with the user's choice.
+Once configured, subsequent `start` calls work directly without asking again.
+
 ## Profile system
 
 Each profile has its own isolated user-data directory:
@@ -108,6 +132,29 @@ lose their login state.
 Edit `config.json` in the skill directory:
 
 ```json
+{
+  "browser": {
+    "browserPath": "",
+    "headless": false,
+    "noSandbox": true,
+    "defaultProfile": "default",
+    "extraArgs": [
+      "--disable-blink-features=AutomationControlled",
+      "--disable-infobars",
+      "--window-size=1280,720"
+    ],
+    "profiles": {
+      "default": { "cdpPort": 9222 }
+    }
+  }
+}
+```
+
+### Browser path
+
+| Field | Description |
+|-------|-------------|
+| `browserPath` | Absolute path to browser executable. When empty, `start` triggers auto-detection and asks user to confirm. Supports Linux paths and Windows paths via WSL (e.g., `/mnt/c/Program Files/Google/Chrome/Application/chrome.exe`). |
 {
   "browser": {
     "headless": false,

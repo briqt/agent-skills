@@ -1,5 +1,6 @@
 {
   "browser": {
+    "browserPath": "",
     "headless": false,
     "noSandbox": true,
     "defaultProfile": "default",
