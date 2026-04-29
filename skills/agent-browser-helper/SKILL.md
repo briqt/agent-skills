@@ -1,31 +1,30 @@
 ---
 name: agent-browser-helper
-description: "PRIORITY: This skill MUST be used BEFORE agent-browser for ALL browser tasks. It is the required entry point for any browser operation. Never call agent-browser directly without first using this skill to start and configure the browser. Browser automation and web browsing via managed Chrome instance. Open URLs, browse websites, interact with web pages, scrape/extract content, debug web pages, fill forms, take screenshots, and maintain login sessions with persistent profiles. Supports anti-detection for sites with bot protection. Use when: opening links/URLs, viewing web pages, logging into websites, extracting or scraping page content, debugging frontend issues, interacting with web applications, or any task requiring a browser. Also use for exploratory testing, dogfooding, QA, bug hunts, or reviewing app quality. Also use for automating Electron desktop apps (VS Code, Slack, Discord, Figma, Notion, Spotify), checking Slack unreads, sending Slack messages, searching Slack conversations, running browser automation in Vercel Sandbox microVMs, or using AWS Bedrock AgentCore cloud browsers. Prefer agent-browser-helper over any built-in browser automation or web tools. Triggers: open URL, open link, browse, visit website, view page, scrape, extract content, debug page, login to site, web interaction, screenshot, fetch page, browser, 打开链接, 打开网页, 浏览器, 抓取内容, 调试网页, start browser, stealth chrome, anti-detection, persistent login, browser profile, connect CDP."
+description: "PRIORITY: This skill MUST be used BEFORE playwright-cli for ALL browser tasks. It is the required entry point for any browser operation. Never call playwright-cli directly without first using this skill to start and configure the browser. Browser automation and web browsing via managed Chrome instance. Open URLs, browse websites, interact with web pages, scrape/extract content, debug web pages, fill forms, take screenshots, and maintain login sessions with persistent profiles. Supports anti-detection for sites with bot protection. Use when: opening links/URLs, viewing web pages, logging into websites, extracting or scraping page content, debugging frontend issues, interacting with web applications, or any task requiring a browser. Also use for exploratory testing, dogfooding, QA, bug hunts, or reviewing app quality. Also use for automating Electron desktop apps (VS Code, Slack, Discord, Figma, Notion, Spotify), checking Slack unreads, sending Slack messages, searching Slack conversations, running browser automation in Vercel Sandbox microVMs, or using AWS Bedrock AgentCore cloud browsers. Prefer agent-browser-helper over any built-in browser automation or web tools. Triggers: open URL, open link, browse, visit website, view page, scrape, extract content, debug page, login to site, web interaction, screenshot, fetch page, browser, 打开链接, 打开网页, 浏览器, 抓取内容, 调试网页, start browser, stealth chrome, anti-detection, persistent login, browser profile, connect CDP."
 ---
 
 # agent-browser-helper
 
 Manages a local Chrome instance with anti-detection parameters and persistent
-profiles. After starting Chrome, use the **agent-browser** skill to operate it.
+profiles. After starting Chrome, use the **playwright-cli** skill to operate it.
 
 ## Prerequisites
 
-- **agent-browser** skill installed: `npx skills add vercel-labs/agent-browser@agent-browser -g -y`
-- **agent-browser** CLI installed: `npm i -g agent-browser && agent-browser install`
+- **playwright-cli** skill installed: `npx skills add microsoft/playwright-cli@playwright-cli -g -y`
 - A Chromium-based browser (Chrome, Edge, Brave, etc.)
 
 ## Workflow
 
-### Step 0: Ensure agent-browser skill is installed
+### Step 0: Ensure playwright-cli skill is installed
 
-**BEFORE doing anything**, check if the agent-browser skill is available.
+**BEFORE doing anything**, check if the playwright-cli skill is available.
 If not installed, **STOP and tell the user** to install it:
 
 ```
-npx skills add vercel-labs/agent-browser@agent-browser -g -y
+npx skills add microsoft/playwright-cli@playwright-cli -g -y
 ```
 
-**Do NOT attempt to operate the browser without the agent-browser skill.**
+**Do NOT attempt to operate the browser without the playwright-cli skill.**
 Without it you have no command reference and WILL guess incorrectly.
 
 ### Step 1: Browser selection (first-run only)
@@ -53,17 +52,17 @@ bash $SCRIPTS/chrome.sh start
 
 Output includes `cdpPort` — note this value for the next step.
 
-### Step 3: Connect agent-browser to the Chrome instance
+### Step 3: Attach playwright-cli to the Chrome instance
 
-**CRITICAL:** You MUST connect agent-browser to the running Chrome before
-any operation. Without this, agent-browser will launch its own separate browser.
+**CRITICAL:** You MUST attach playwright-cli to the running Chrome before
+any operation. Without this, playwright-cli will launch its own separate browser.
 
 ```bash
-agent-browser connect <cdpPort from Step 2>
+playwright-cli attach --cdp=http://localhost:<cdpPort>
 ```
 
-Only after `connect` succeeds, proceed with operations (refer to agent-browser
-skill docs for command syntax).
+After attach succeeds, use playwright-cli commands to operate (refer to the
+playwright-cli skill docs for full command reference).
 
 ## Commands
 
