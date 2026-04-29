@@ -68,8 +68,8 @@ any operation. Without this, playwright-cli will launch its own separate browser
 playwright-cli attach --cdp=http://localhost:<cdpPort>
 ```
 
-After attach succeeds, use playwright-cli commands to operate (refer to the
-playwright-cli skill docs for full command reference).
+After attach succeeds, **read the playwright-cli skill** for correct command
+syntax before running any commands. Do NOT guess command names.
 
 ## Commands
 
