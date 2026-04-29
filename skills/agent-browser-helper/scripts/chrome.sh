@@ -13,20 +13,84 @@ cfg_get() {
     fi
 }
 
+cfg_set() {
+    local key="$1" value="$2"
+    local tmp; tmp=$(mktemp)
+    jq "$key = \"$value\"" "$CONFIG_FILE" > "$tmp" && mv "$tmp" "$CONFIG_FILE"
+}
+
 get_extra_args() {
     if [[ -f "$CONFIG_FILE" ]]; then
         jq -r '.browser.extraArgs // [] | .[]' "$CONFIG_FILE" 2>/dev/null
     fi
 }
 
-find_chrome() {
-    local custom
-    custom="$(cfg_get '.browser.executablePath')"
-    if [[ -n "$custom" && -x "$custom" ]]; then echo "$custom"; return; fi
-    for bin in google-chrome google-chrome-stable chromium-browser chromium microsoft-edge; do
-        if command -v "$bin" &>/dev/null; then echo "$bin"; return; fi
-    done
-    echo "ERROR: Chrome not found" >&2; return 1
+# --- Browser resolution ---
+# Priority: config browserPath > detection with user confirmation
+find_browser() {
+    # 1. Check configured browserPath
+    local configured
+    configured="$(cfg_get '.browser.browserPath')"
+    if [[ -n "$configured" ]]; then
+        if [[ -x "$configured" ]] || [[ -f "$configured" ]]; then
+            echo "$configured"; return 0
+        fi
+        echo "ERROR: Configured browserPath '$configured' is not executable. Run: chrome.sh detect" >&2
+        return 1
+    fi
+
+    # 2. browserPath is empty — require detection
+    echo "NEEDS_DETECTION"
+    return 0
+}
+
+cmd_detect() {
+    local result
+    result="$(bash "$SCRIPTS/detect-browsers.sh" 2>/dev/null)" || {
+        echo '{"error":"No browsers found. Install a Chromium-based browser or set browserPath in config.json"}'
+        return 1
+    }
+
+    local count
+    count=$(echo "$result" | jq '.browsers | length')
+    if [[ "$count" -eq 0 ]]; then
+        echo '{"error":"No browsers found. Install a Chromium-based browser or set browserPath in config.json"}'
+        return 1
+    fi
+
+    echo "$result" | jq '{
+        action_required: "select_browser",
+        message: "Multiple browsers detected. Ask the user which one to use, then call: chrome.sh set-browser <number>",
+        browsers: [.browsers | to_entries[] | {index: (.key + 1), name: .value.name, path: .value.path, version: .value.version}]
+    }'
+}
+
+cmd_set_browser() {
+    local choice="${1:-}"
+    if [[ -z "$choice" ]]; then
+        echo '{"error":"Usage: chrome.sh set-browser <number> OR chrome.sh set-browser <path>"}'; return 1
+    fi
+
+    # If it's a number, resolve from detection
+    if [[ "$choice" =~ ^[0-9]+$ ]]; then
+        local result
+        result="$(bash "$SCRIPTS/detect-browsers.sh" 2>/dev/null)" || { echo '{"error":"Detection failed"}'; return 1; }
+        local path
+        path=$(echo "$result" | jq -r ".browsers[$((choice - 1))].path // empty")
+        if [[ -z "$path" ]]; then
+            echo "{\"error\":\"Invalid selection: $choice\"}"; return 1
+        fi
+        cfg_set '.browser.browserPath' "$path"
+        echo "{\"status\":\"configured\",\"browserPath\":\"$path\"}"
+    else
+        # Direct path provided
+        if [[ -x "$choice" ]] || [[ -f "$choice" ]]; then
+            cfg_set '.browser.browserPath' "$choice"
+            echo "{\"status\":\"configured\",\"browserPath\":\"$choice\"}"
+        else
+            echo "{\"error\":\"Path not found or not executable: $choice\"}"; return 1
+        fi
+    fi
 }
 
 # --- Argument parsing ---
@@ -74,7 +138,14 @@ cmd_start() {
         return 0
     fi
 
-    local chrome; chrome="$(find_chrome)" || exit 1
+    # Resolve browser — if not configured, run detection
+    local chrome
+    chrome="$(find_browser)"
+    if [[ "$chrome" == "NEEDS_DETECTION" ]]; then
+        cmd_detect
+        return 1
+    fi
+
     local user_data_dir; user_data_dir="$(get_user_data_dir)"
     mkdir -p "$user_data_dir" "$(dirname "$pid_file")"
 
@@ -120,11 +191,8 @@ cmd_start() {
         echo "{\"error\":\"CDP not ready after 15s\"}" >&2; exit 1
     fi
 
-    # Check agent-browser availability
     local ab_status="installed"
-    if ! command -v agent-browser &>/dev/null; then
-        ab_status="cli_missing"
-    fi
+    if ! command -v agent-browser &>/dev/null; then ab_status="cli_missing"; fi
     local skill_hint=""
     if [[ ! -d "$HOME/.agents/skills/agent-browser" ]] && [[ ! -f "$HOME/.kiro/skills/agent-browser/SKILL.md" ]]; then
         skill_hint="agent-browser skill not found. Install: npx skills add vercel-labs/agent-browser@agent-browser -g -y"
@@ -166,13 +234,15 @@ cmd_status() {
     if is_cdp_ready "$_PORT"; then
         browser="$(curl -s "http://127.0.0.1:$_PORT/json/version" | jq -r '.Browser // "unknown"')"
     fi
-    echo "{\"running\":$running,\"pid\":$pid,\"cdpPort\":$_PORT,\"profile\":\"$_PROFILE\",\"browser\":\"$browser\"}"
+    echo "{\"running\":$running,\"pid\":$pid,\"cdpPort\":$_PORT,\"profile\":\"$_PROFILE\",\"browser\":\"$browser\",\"browserPath\":\"$(cfg_get '.browser.browserPath')\"}"
 }
 
 # --- Dispatch ---
 case "${1:-help}" in
-    start)  shift; cmd_start "$@" ;;
-    stop)   shift; cmd_stop "$@" ;;
-    status) shift; cmd_status "$@" ;;
-    *)      echo "Usage: chrome.sh {start|stop|status} [--profile NAME] [--port PORT] [--headless]" ;;
+    start)       shift; cmd_start "$@" ;;
+    stop)        shift; cmd_stop "$@" ;;
+    status)      shift; cmd_status "$@" ;;
+    detect)      shift; cmd_detect ;;
+    set-browser) shift; cmd_set_browser "$@" ;;
+    *)           echo "Usage: chrome.sh {start|stop|status|detect|set-browser} [--profile NAME] [--port PORT] [--headless]" ;;
 esac
