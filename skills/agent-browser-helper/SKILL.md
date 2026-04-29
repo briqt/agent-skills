@@ -10,8 +10,15 @@ profiles. After starting Chrome, use the **playwright-cli** skill to operate it.
 
 ## Prerequisites
 
-- **playwright-cli** skill installed: `npx skills add microsoft/playwright-cli@playwright-cli -g -y`
+- **playwright-cli** skill + CLI:
+  ```bash
+  npx skills add microsoft/playwright-cli@playwright-cli -g -y
+  npm i -g @playwright/cli@latest
+  ```
 - A Chromium-based browser (Chrome, Edge, Brave, etc.)
+
+If `chrome.sh start` outputs a `warning` field, follow the install instructions
+in that message before proceeding.
 
 ## Workflow
 
