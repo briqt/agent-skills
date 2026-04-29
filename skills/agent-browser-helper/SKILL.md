@@ -53,13 +53,17 @@ bash $SCRIPTS/chrome.sh start
 
 Output includes `cdpPort` — note this value for the next step.
 
-### Step 3: Operate via agent-browser
+### Step 3: Connect agent-browser to the Chrome instance
 
-Read the **agent-browser** skill documentation for command syntax.
-Pass the `cdpPort` from Step 2 when connecting.
+**CRITICAL:** You MUST connect agent-browser to the running Chrome before
+any operation. Without this, agent-browser will launch its own separate browser.
 
-**Do NOT guess agent-browser commands.** They have non-standard conventions.
-Always refer to the agent-browser skill docs.
+```bash
+agent-browser connect <cdpPort from Step 2>
+```
+
+Only after `connect` succeeds, proceed with operations (refer to agent-browser
+skill docs for command syntax).
 
 ## Commands
 
