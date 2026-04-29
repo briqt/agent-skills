@@ -114,7 +114,7 @@ resolve() {
     if [[ -z "$_PORT" ]]; then
         _PORT="$(cfg_get ".browser.profiles.\"$_PROFILE\".cdpPort")"
     fi
-    _PORT="${_PORT:-9222}"
+    _PORT="${_PORT:-19222}"
 }
 
 get_user_data_dir() {
@@ -148,6 +148,11 @@ cmd_start() {
 
     local user_data_dir; user_data_dir="$(get_user_data_dir)"
     mkdir -p "$user_data_dir" "$(dirname "$pid_file")"
+
+    # Auto-increment port if already in use
+    while ss -tlnp 2>/dev/null | grep -q ":$_PORT " || is_cdp_ready "$_PORT"; do
+        _PORT=$((_PORT + 1))
+    done
 
     local args=(
         "$chrome"
