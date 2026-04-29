@@ -21,6 +21,23 @@ shows a warning about missing skill, install it first.
 
 ## Workflow
 
+### Step 0: Browser selection (first-run only)
+
+If `start` returns `action_required: "select_browser"`, you **MUST** present
+the full list to the user and ask them to choose. **Do NOT pick one yourself.**
+
+Example interaction:
+> Agent: "检测到以下浏览器，请选择使用哪个：
+> 1. Google Chrome (Linux) - /usr/bin/google-chrome
+> 2. Google Chrome (Windows) - /mnt/c/Program Files/Google/Chrome/Application/chrome.exe
+> 3. Microsoft Edge (Windows) - /mnt/c/Program Files (x86)/Microsoft/Edge/Application/msedge.exe"
+>
+> User: "用2"
+>
+> Agent: `chrome.sh set-browser 2`
+
+Then retry `start`. This only happens once — the choice is saved to config.
+
 ### Step 1: Start Chrome
 
 ```bash
