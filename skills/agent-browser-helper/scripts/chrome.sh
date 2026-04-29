@@ -133,7 +133,7 @@ cmd_start() {
     parse_flags "$@"; resolve
     local pid_file; pid_file="$(get_pid_file)"
 
-    if [[ -f "$pid_file" ]] && kill -0 "$(cat "$pid_file")" 2>/dev/null && is_cdp_ready "$_PORT"; then
+    if [[ -f "$pid_file" ]] && is_cdp_ready "$_PORT"; then
         echo "{\"status\":\"already_running\",\"pid\":$(cat "$pid_file"),\"cdpPort\":$_PORT,\"profile\":\"$_PROFILE\"}"
         return 0
     fi
@@ -149,6 +149,17 @@ cmd_start() {
     local user_data_dir; user_data_dir="$(get_user_data_dir)"
     mkdir -p "$user_data_dir" "$(dirname "$pid_file")"
 
+    # For Windows browsers (.exe), use a Windows-native path for user-data-dir
+    # UNC paths (\\wsl.localhost\...) fail with LockFileEx errors
+    local launch_data_dir="$user_data_dir"
+    if [[ "$chrome" == *.exe ]]; then
+        local win_appdata
+        win_appdata=$(/mnt/c/Windows/System32/cmd.exe /c "echo %LOCALAPPDATA%" 2>/dev/null | tr -d '\r')
+        if [[ -n "$win_appdata" ]]; then
+            launch_data_dir="${win_appdata}\\agent-browser-helper\\${_PROFILE}"
+        fi
+    fi
+
     # Auto-increment port if already in use
     while ss -tlnp 2>/dev/null | grep -q ":$_PORT " || is_cdp_ready "$_PORT"; do
         _PORT=$((_PORT + 1))
@@ -157,7 +168,7 @@ cmd_start() {
     local args=(
         "$chrome"
         "--remote-debugging-port=$_PORT"
-        "--user-data-dir=$user_data_dir"
+        "--user-data-dir=$launch_data_dir"
         "--no-first-run"
         "--no-default-browser-check"
         "--disable-sync"
@@ -178,14 +189,18 @@ cmd_start() {
         [[ -n "$extra" ]] && args+=("$extra")
     done < <(get_extra_args)
 
-    "${args[@]}" &>/dev/null &
+    "${args[@]}" </dev/null &>/dev/null &
     local pid=$!
     echo "$pid" > "$pid_file"
+
+    local is_win_exe=false
+    [[ "$chrome" == *.exe ]] && is_win_exe=true
 
     local elapsed=0
     while ! is_cdp_ready "$_PORT" && (( elapsed < 30 )); do
         sleep 0.5; elapsed=$((elapsed + 1))
-        if ! kill -0 "$pid" 2>/dev/null; then
+        # For Windows .exe, the WSL PID exits immediately — only check CDP
+        if [[ "$is_win_exe" == false ]] && ! kill -0 "$pid" 2>/dev/null; then
             rm -f "$pid_file"
             echo "{\"error\":\"Chrome exited unexpectedly\"}" >&2; exit 1
         fi
