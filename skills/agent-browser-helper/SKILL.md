@@ -16,39 +16,89 @@ profiles. After starting Chrome, use the **agent-browser** skill to operate it.
 
 If agent-browser is not installed, prompt the user to install it before proceeding.
 
-## Usage
+## Workflow
+
+### Step 1: Start Chrome
+
+```bash
+bash $SCRIPTS/chrome.sh start
+```
+
+Output example:
+```json
+{"status":"started","pid":12345,"cdpPort":9222,"profile":"default","userDataDir":"~/.agent-browser-helper/default/user-data"}
+```
+
+**Read the output carefully** — it tells you the CDP port and which profile
+is active. The profile's user-data-dir persists login state across sessions.
+
+### Step 2: Load agent-browser documentation
+
+Before running any agent-browser command, load its usage guide:
+
+```bash
+agent-browser skills get core
+```
+
+This gives you the correct command syntax. Do NOT guess commands — they are
+not standard CLI conventions (e.g., `open` not `navigate`, positional args
+not `--url` flags).
+
+### Step 3: Operate via agent-browser
+
+Connect using the CDP port from Step 1:
+
+```bash
+agent-browser open <url> --cdp 9222
+```
+
+All subsequent commands in the same session inherit the CDP connection.
+
+## Commands
 
 > `$SCRIPTS` = this skill's `scripts/` absolute path.
 
-### start — Launch anti-detection Chrome
+### start
 
 ```bash
-bash $SCRIPTS/chrome.sh start                    # default profile, port 9222
-bash $SCRIPTS/chrome.sh start --profile work     # named profile
-bash $SCRIPTS/chrome.sh start --headless         # headless mode
+bash $SCRIPTS/chrome.sh start                    # default profile, headed, port 9222
+bash $SCRIPTS/chrome.sh start --profile work     # named profile (isolated user-data)
+bash $SCRIPTS/chrome.sh start --headless         # headless (default is HEADED)
 bash $SCRIPTS/chrome.sh start --port 9333        # custom CDP port
 ```
 
-Output: `{"status":"started","pid":12345,"cdpPort":9222,"profile":"default"}`
-
-### stop — Graceful shutdown
+### stop
 
 ```bash
 bash $SCRIPTS/chrome.sh stop
 bash $SCRIPTS/chrome.sh stop --profile work
 ```
 
-### status — Check if Chrome is running
+### status
 
 ```bash
 bash $SCRIPTS/chrome.sh status
 ```
 
-## After starting Chrome
+## Profile system
 
-Use the **agent-browser** skill with `--cdp <port>` to connect and operate
-the browser. Refer to agent-browser's own skill documentation for all
-available commands (`agent-browser skills get core`).
+Each profile has its own isolated user-data directory:
+`~/.agent-browser-helper/{profile}/user-data`
+
+This means:
+- **Cookies, localStorage, sessions persist** across browser restarts
+- **Extensions** installed in a profile stay installed
+- **Login state survives** — no need to re-authenticate every time
+- Different profiles are fully isolated (different ports, different data)
+
+**When to use named profiles:**
+- `--profile xiaohongshu` — keep XHS login separate
+- `--profile work` — corporate SSO sessions
+- `--profile clean` — fresh profile for testing
+
+**Important:** If the user has previously logged into a site, remind them
+which profile contains that session. Don't start a new unnamed profile and
+lose their login state.
 
 ## Configuration
 
@@ -61,7 +111,9 @@ Edit `config.json` in the skill directory:
     "noSandbox": true,
     "defaultProfile": "default",
     "extraArgs": [
-      "--disable-blink-features=AutomationControlled"
+      "--disable-blink-features=AutomationControlled",
+      "--disable-infobars",
+      "--window-size=1920,1080"
     ],
     "profiles": {
       "default": { "cdpPort": 9222 }
@@ -75,22 +127,30 @@ Edit `config.json` in the skill directory:
 | Field | Description | Default |
 |-------|-------------|---------|
 | `cdpPort` | CDP debugging port | 9222 |
-| `userDataDir` | Custom user data directory (reuse existing login state) | `~/.agent-browser-helper/{profile}/user-data` |
+| `userDataDir` | Custom user data directory | `~/.agent-browser-helper/{profile}/user-data` |
 
-### extraArgs examples
+### extraArgs for anti-detection
 
-| Arg | Purpose |
-|-----|---------|
-| `--disable-blink-features=AutomationControlled` | Hide automation (enabled by default) |
-| `--proxy-server=http://HOST:PORT` | HTTP proxy |
-| `--lang=zh-CN` | Browser language |
-| `--window-size=1920,1080` | Window size |
-| `--user-agent=...` | Custom User-Agent |
+| Arg | Purpose | Default |
+|-----|---------|---------|
+| `--disable-blink-features=AutomationControlled` | Hide `navigator.webdriver` | ✅ on |
+| `--disable-infobars` | Remove automation info bar | ✅ on |
+| `--window-size=1920,1080` | Normal viewport (avoids 800x600 fingerprint) | ✅ on |
+| `--proxy-server=http://HOST:PORT` | HTTP proxy | off |
+| `--lang=zh-CN` | Browser language | off |
+| `--user-agent=...` | Custom User-Agent | off |
 
-## Why this skill exists
+## Anti-detection defaults
 
-- No `--enable-automation` flag (`navigator.webdriver` stays undefined)
-- Persistent user-data-dir (real cookies, extensions, history survive restarts)
-- Minimal launch parameters (looks like a normal user's Chrome)
-- No Playwright/Puppeteer in the launch path — pure Chrome + CDP port
-- Multiple profiles on different ports, isolated from each other
+Out of the box, this skill applies:
+
+1. **No `--enable-automation`** — `navigator.webdriver` returns `undefined`
+2. **`--disable-blink-features=AutomationControlled`** — removes CDP automation markers
+3. **`--disable-infobars`** — no "Chrome is being controlled" banner
+4. **`--window-size=1920,1080`** — normal desktop viewport
+5. **Headed mode** — headless browsers have distinct fingerprints
+6. **Persistent profile** — real cookies/history make the browser look "lived-in"
+7. **No Playwright/Puppeteer in launch path** — no extra automation flags injected
+
+For sites with aggressive detection (Cloudflare, DataDome), consider also adding
+a real User-Agent string and proxy to `extraArgs`.
