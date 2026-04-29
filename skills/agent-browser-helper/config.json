@@ -1,6 +1,6 @@
 {
   "browser": {
-    "browserPath": "",
+    "browserPath": "/mnt/c/Program Files/Google/Chrome/Application/chrome.exe",
     "headless": false,
     "noSandbox": true,
     "defaultProfile": "default",
