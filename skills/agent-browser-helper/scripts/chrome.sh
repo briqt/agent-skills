@@ -180,10 +180,10 @@ cmd_start() {
     if [[ "$_HEADLESS" == "true" ]] || [[ "$(cfg_get '.browser.headless')" == "true" ]]; then
         args+=("--headless=new" "--disable-gpu")
     fi
-    if [[ "$(cfg_get '.browser.noSandbox')" == "true" ]]; then
+    if [[ "$(cfg_get '.browser.noSandbox')" == "true" ]] && [[ "$chrome" != *.exe ]]; then
         args+=("--no-sandbox" "--disable-setuid-sandbox")
     fi
-    [[ "$(uname)" == "Linux" ]] && args+=("--disable-dev-shm-usage")
+    [[ "$(uname)" == "Linux" ]] && [[ "$chrome" != *.exe ]] && args+=("--disable-dev-shm-usage")
 
     while IFS= read -r extra; do
         [[ -n "$extra" ]] && args+=("$extra")
