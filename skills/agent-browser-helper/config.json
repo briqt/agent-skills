@@ -1,0 +1,15 @@
+{
+  "browser": {
+    "headless": false,
+    "noSandbox": true,
+    "defaultProfile": "default",
+    "extraArgs": [
+      "--disable-blink-features=AutomationControlled"
+    ],
+    "profiles": {
+      "default": {
+        "cdpPort": 9222
+      }
+    }
+  }
+}
