@@ -64,15 +64,23 @@ This outputs the correct command syntax. Do NOT guess commands — they use
 non-standard conventions (e.g., `open` not `navigate`, positional args not
 `--url` flags). If this command fails, the CLI is not installed.
 
-### Step 3: Operate via agent-browser
+### Step 3: Connect and operate via agent-browser
 
-Connect using the CDP port from Step 1:
+**First**, connect to the CDP port reported by Step 1:
 
 ```bash
-agent-browser open <url> --cdp 9222
+agent-browser connect <port>
 ```
 
-All subsequent commands in the same session inherit the CDP connection.
+**Then** run commands (the connection persists for the session):
+
+```bash
+agent-browser open <url>
+agent-browser snapshot
+```
+
+**IMPORTANT:** Do NOT put `--cdp` after the subcommand — it will be ignored
+and agent-browser will launch its own headless browser instead.
 
 ## Commands
 
