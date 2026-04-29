@@ -59,17 +59,11 @@ bash $SCRIPTS/chrome.sh start
 
 Output includes `cdpPort` — note this value for the next step.
 
-### Step 3: Attach playwright-cli to the Chrome instance
+### Step 3: Operate the browser via playwright-cli
 
-**CRITICAL:** You MUST attach playwright-cli to the running Chrome before
-any operation. Without this, playwright-cli will launch its own separate browser.
-
-```bash
-playwright-cli attach --cdp=http://localhost:<cdpPort>
-```
-
-After attach succeeds, **read the playwright-cli skill** for correct command
-syntax before running any commands. Do NOT guess command names.
+**Read the playwright-cli skill** to learn how to attach to an existing browser
+via CDP and operate it. Pass `http://localhost:<cdpPort>` from Step 2 as the
+CDP endpoint. Do NOT guess commands — read the skill first.
 
 ## Commands
 

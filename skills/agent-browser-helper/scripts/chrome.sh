@@ -216,7 +216,7 @@ cmd_start() {
         skill_hint="playwright-cli not found. Install: npx skills add microsoft/playwright-cli@playwright-cli -g -y && npm i -g @playwright/cli@latest"
     fi
 
-    echo "{\"status\":\"started\",\"pid\":$pid,\"cdpPort\":$_PORT,\"profile\":\"$_PROFILE\",\"userDataDir\":\"$(get_user_data_dir)\"$([ -n "$skill_hint" ] && echo ",\"warning\":\"$skill_hint\""),\"next\":\"Attach to browser: playwright-cli attach --cdp=http://localhost:$_PORT\"}"
+    echo "{\"status\":\"started\",\"pid\":$pid,\"cdpPort\":$_PORT,\"profile\":\"$_PROFILE\",\"userDataDir\":\"$(get_user_data_dir)\"$([ -n "$skill_hint" ] && echo ",\"warning\":\"$skill_hint\"")}"
 }
 
 cmd_stop() {
