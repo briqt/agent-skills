@@ -120,7 +120,17 @@ cmd_start() {
         echo "{\"error\":\"CDP not ready after 15s\"}" >&2; exit 1
     fi
 
-    echo "{\"status\":\"started\",\"pid\":$pid,\"cdpPort\":$_PORT,\"profile\":\"$_PROFILE\"}"
+    # Check agent-browser availability
+    local ab_status="installed"
+    if ! command -v agent-browser &>/dev/null; then
+        ab_status="cli_missing"
+    fi
+    local skill_hint=""
+    if [[ ! -d "$HOME/.agents/skills/agent-browser" ]] && [[ ! -f "$HOME/.kiro/skills/agent-browser/SKILL.md" ]]; then
+        skill_hint="agent-browser skill not found. Install: npx skills add vercel-labs/agent-browser@agent-browser -g -y"
+    fi
+
+    echo "{\"status\":\"started\",\"pid\":$pid,\"cdpPort\":$_PORT,\"profile\":\"$_PROFILE\",\"userDataDir\":\"$(get_user_data_dir)\",\"agentBrowser\":\"$ab_status\"$([ -n "$skill_hint" ] && echo ",\"warning\":\"$skill_hint\""),\"next\":\"Load agent-browser docs: agent-browser skills get core\"}"
 }
 
 cmd_stop() {
