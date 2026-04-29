@@ -1,6 +1,6 @@
 ---
 name: agent-browser-helper
-description: "Local Chrome lifecycle management with anti-detection for agent-browser. Start/stop a stealth Chrome instance with persistent profiles, then connect agent-browser via CDP. Use when you need to browse sites with bot detection (login flows, scraping), maintain persistent login sessions across runs, or manage multiple browser profiles. Triggers: start browser, stealth chrome, anti-detection, persistent login, browser profile, connect CDP."
+description: "Browser automation and web browsing via managed Chrome instance. Open URLs, browse websites, interact with web pages, scrape/extract content, debug web pages, fill forms, take screenshots, and maintain login sessions with persistent profiles. Supports anti-detection for sites with bot protection. Use when: opening links/URLs, viewing web pages, logging into websites, extracting or scraping page content, debugging frontend issues, interacting with web applications, or any task requiring a browser. Triggers: open URL, open link, browse, visit website, view page, scrape, extract content, debug page, login to site, web interaction, screenshot, fetch page, browser, 打开链接, 打开网页, 浏览器, 抓取内容, 调试网页, start browser, stealth chrome, anti-detection, persistent login, browser profile, connect CDP."
 ---
 
 # agent-browser-helper
