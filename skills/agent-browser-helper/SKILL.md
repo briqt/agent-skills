@@ -113,7 +113,7 @@ Edit `config.json` in the skill directory:
     "extraArgs": [
       "--disable-blink-features=AutomationControlled",
       "--disable-infobars",
-      "--window-size=1920,1080"
+      "--window-size=1280,720"
     ],
     "profiles": {
       "default": { "cdpPort": 9222 }
@@ -135,7 +135,7 @@ Edit `config.json` in the skill directory:
 |-----|---------|---------|
 | `--disable-blink-features=AutomationControlled` | Hide `navigator.webdriver` | ✅ on |
 | `--disable-infobars` | Remove automation info bar | ✅ on |
-| `--window-size=1920,1080` | Normal viewport (avoids 800x600 fingerprint) | ✅ on |
+| `--window-size=1280,720` | Normal viewport (avoids 800x600 fingerprint) | ✅ on |
 | `--proxy-server=http://HOST:PORT` | HTTP proxy | off |
 | `--lang=zh-CN` | Browser language | off |
 | `--user-agent=...` | Custom User-Agent | off |
@@ -147,7 +147,7 @@ Out of the box, this skill applies:
 1. **No `--enable-automation`** — `navigator.webdriver` returns `undefined`
 2. **`--disable-blink-features=AutomationControlled`** — removes CDP automation markers
 3. **`--disable-infobars`** — no "Chrome is being controlled" banner
-4. **`--window-size=1920,1080`** — normal desktop viewport
+4. **`--window-size=1280,720`** — normal desktop viewport
 5. **Headed mode** — headless browsers have distinct fingerprints
 6. **Persistent profile** — real cookies/history make the browser look "lived-in"
 7. **No Playwright/Puppeteer in launch path** — no extra automation flags injected
