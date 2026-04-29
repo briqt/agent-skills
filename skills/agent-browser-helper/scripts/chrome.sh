@@ -211,14 +211,12 @@ cmd_start() {
         echo "{\"error\":\"CDP not ready after 15s\"}" >&2; exit 1
     fi
 
-    local ab_status="installed"
-    if ! command -v playwright-cli &>/dev/null; then ab_status="cli_missing"; fi
     local skill_hint=""
-    if [[ ! -d "$HOME/.agents/skills/playwright-cli" ]] && [[ ! -f "$HOME/.kiro/skills/playwright-cli/SKILL.md" ]]; then
-        skill_hint="playwright-cli skill not found. Install: npx skills add microsoft/playwright-cli@playwright-cli -g -y"
+    if ! command -v playwright-cli &>/dev/null; then
+        skill_hint="playwright-cli not found. Install: npx skills add microsoft/playwright-cli@playwright-cli -g -y && npm i -g @playwright/cli@latest"
     fi
 
-    echo "{\"status\":\"started\",\"pid\":$pid,\"cdpPort\":$_PORT,\"profile\":\"$_PROFILE\",\"userDataDir\":\"$(get_user_data_dir)\",\"playwrightCli\":\"$ab_status\"$([ -n "$skill_hint" ] && echo ",\"warning\":\"$skill_hint\""),\"next\":\"Attach to browser: playwright-cli attach --cdp=http://localhost:$_PORT\"}"
+    echo "{\"status\":\"started\",\"pid\":$pid,\"cdpPort\":$_PORT,\"profile\":\"$_PROFILE\",\"userDataDir\":\"$(get_user_data_dir)\"$([ -n "$skill_hint" ] && echo ",\"warning\":\"$skill_hint\""),\"next\":\"Attach to browser: playwright-cli attach --cdp=http://localhost:$_PORT\"}"
 }
 
 cmd_stop() {
