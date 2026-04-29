@@ -14,7 +14,10 @@ profiles. After starting Chrome, use the **agent-browser** skill to operate it.
 - **agent-browser** CLI: `npm i -g agent-browser && agent-browser install`
 - Google Chrome or Chromium installed
 
-If agent-browser is not installed, prompt the user to install it before proceeding.
+**IMPORTANT:** The agent-browser **skill** must be installed for the AI agent
+to know how to operate the browser. Without it, the agent has no command
+reference and will guess incorrectly. Check `chrome.sh start` output — if it
+shows a warning about missing skill, install it first.
 
 ## Workflow
 
@@ -34,15 +37,15 @@ is active. The profile's user-data-dir persists login state across sessions.
 
 ### Step 2: Load agent-browser documentation
 
-Before running any agent-browser command, load its usage guide:
+**MUST DO before running any agent-browser command.** Run:
 
 ```bash
 agent-browser skills get core
 ```
 
-This gives you the correct command syntax. Do NOT guess commands — they are
-not standard CLI conventions (e.g., `open` not `navigate`, positional args
-not `--url` flags).
+This outputs the correct command syntax. Do NOT guess commands — they use
+non-standard conventions (e.g., `open` not `navigate`, positional args not
+`--url` flags). If this command fails, the CLI is not installed.
 
 ### Step 3: Operate via agent-browser
 
