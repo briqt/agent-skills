@@ -6,31 +6,17 @@ description: "Local Chrome lifecycle management with anti-detection for agent-br
 # agent-browser-helper
 
 Manages a local Chrome instance with anti-detection parameters and persistent
-profiles. Designed as a companion to the `agent-browser` skill — this skill
-starts Chrome, agent-browser operates it.
+profiles. After starting Chrome, use the **agent-browser** skill to operate it.
 
 ## Prerequisites
 
-- `agent-browser` skill installed: `npx skills add vercel-labs/agent-browser@agent-browser -g -y`
-- `agent-browser` CLI installed: `npm i -g agent-browser && agent-browser install`
+- **agent-browser** skill: `npx skills add vercel-labs/agent-browser@agent-browser -g -y`
+- **agent-browser** CLI: `npm i -g agent-browser && agent-browser install`
 - Google Chrome or Chromium installed
 
-## Quick start
+If agent-browser is not installed, prompt the user to install it before proceeding.
 
-```bash
-# 1. Start stealth Chrome with persistent profile
-bash $SCRIPTS/chrome.sh start
-
-# 2. Use agent-browser with CDP connection
-agent-browser open https://example.com --cdp 9222
-agent-browser snapshot -i
-agent-browser click @e1
-
-# 3. Stop when done (or keep running for session reuse)
-bash $SCRIPTS/chrome.sh stop
-```
-
-## Commands
+## Usage
 
 > `$SCRIPTS` = this skill's `scripts/` absolute path.
 
@@ -42,6 +28,8 @@ bash $SCRIPTS/chrome.sh start --profile work     # named profile
 bash $SCRIPTS/chrome.sh start --headless         # headless mode
 bash $SCRIPTS/chrome.sh start --port 9333        # custom CDP port
 ```
+
+Output: `{"status":"started","pid":12345,"cdpPort":9222,"profile":"default"}`
 
 ### stop — Graceful shutdown
 
@@ -55,6 +43,12 @@ bash $SCRIPTS/chrome.sh stop --profile work
 ```bash
 bash $SCRIPTS/chrome.sh status
 ```
+
+## After starting Chrome
+
+Use the **agent-browser** skill with `--cdp <port>` to connect and operate
+the browser. Refer to agent-browser's own skill documentation for all
+available commands (`agent-browser skills get core`).
 
 ## Configuration
 
@@ -76,7 +70,7 @@ Edit `config.json` in the skill directory:
 }
 ```
 
-### Optional profile settings
+### Profile options
 
 | Field | Description | Default |
 |-------|-------------|---------|
@@ -93,33 +87,10 @@ Edit `config.json` in the skill directory:
 | `--window-size=1920,1080` | Window size |
 | `--user-agent=...` | Custom User-Agent |
 
-## Anti-detection features
+## Why this skill exists
 
-- No `--enable-automation` flag (navigator.webdriver stays undefined)
-- `--disable-blink-features=AutomationControlled` by default
-- Persistent user-data-dir (real cookies, extensions, history)
-- Minimal launch parameters (looks like a normal Chrome)
-- No Playwright/Puppeteer dependency in the launch path
-
-## Using with agent-browser
-
-After `chrome.sh start`, agent-browser connects via CDP:
-
-```bash
-agent-browser open <url> --cdp 9222
-agent-browser snapshot -i
-agent-browser fill @e1 "username"
-agent-browser click @e2
-agent-browser screenshot result.png
-```
-
-All agent-browser commands work — click, fill, type, wait, screenshot,
-network, cookies, state save/load, etc. See `agent-browser skills get core`
-for the full reference.
-
-## Notes
-
-- User data persists at `~/.agent-browser-helper/{profile}/user-data`
-- Login state survives across sessions (no need to re-login)
-- Multiple profiles supported on different ports
-- Chrome process tracked via PID file at `~/.agent-browser-helper/{profile}/chrome.pid`
+- No `--enable-automation` flag (`navigator.webdriver` stays undefined)
+- Persistent user-data-dir (real cookies, extensions, history survive restarts)
+- Minimal launch parameters (looks like a normal user's Chrome)
+- No Playwright/Puppeteer in the launch path — pure Chrome + CDP port
+- Multiple profiles on different ports, isolated from each other
