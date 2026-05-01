@@ -7,6 +7,14 @@ description: Manage interactive terminal sessions (SSH, REPLs, databases, TUI ap
 
 You have access to `pty-bridge`, a CLI tool that manages interactive terminal sessions with full PTY support. Use it when the standard Bash tool cannot handle interactive programs — SSH, REPLs, database CLIs, TUI apps, or any command that expects terminal input.
 
+## Installation
+
+```bash
+npm i -g github:briqt/pty-bridge-cli
+```
+
+> Requires Node.js 18+ and C++ build toolchain (`apt install build-essential python3` on Debian/Ubuntu).
+
 ## When to Use
 
 - SSH into remote servers
